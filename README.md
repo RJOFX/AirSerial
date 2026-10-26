@@ -9,20 +9,26 @@ Talk to Arduino boards, USB-serial adapters (FTDI, CH340, CP210x, PL2303), PLCs,
 ![AIR](https://img.shields.io/badge/Adobe%20AIR-32%20%E2%80%93%2051-red)
 [![License](https://img.shields.io/badge/license-free%20for%20non--commercial%20use-lightgrey)](LICENSE)
 
-[한국어 문서 (Korean)](README.ko.md) · [API reference](docs/API.md) · [Changelog](CHANGELOG.md) · [Examples](examples)
+[한국어 문서 (Korean)](README.ko.md) · [API reference](docs/API.md) · [Examples](examples) · [Changelog](CHANGELOG.md) · [FAQ](#faq)
 
 ---
 
+## Background
+
+AIR has no serial port API. For years the usual workaround was a proxy program that relayed the COM port to a TCP socket, so most AS3 serial code — and libraries built on it — was written against `flash.net.Socket`.
+
+AirSerial talks to the COM port directly and **behaves like a `Socket`**: the same `IDataInput` / `IDataOutput` methods, the same `ProgressEvent.SOCKET_DATA` event (`"socketData"`), the same `flush()`. Code that reads from a socket can read from a serial port with few or no changes. On top of that it adds what a serial device needs: port discovery, line settings, hot-plug handling and packet framing.
+
 ## Features
 
-- **Socket-style API** — `IDataInput` / `IDataOutput`, `ProgressEvent.SOCKET_DATA`, `flush()`. If you know `Socket`, you know AirSerial.
-- **Any line settings** — any baud rate the driver accepts (9600 … 3 Mbps), 5–8 data bits, parity, 1/1.5/2 stop bits, RTS/CTS or XON/XOFF flow control, DTR/RTS control.
+- **Socket-style API** — `IDataInput` / `IDataOutput`, `ProgressEvent.SOCKET_DATA`, `flush()`.
+- **Any line settings** — any baud rate the driver accepts (9600, 115200, 921600, 1000000, …), 5–8 data bits, parity, 1/1.5/2 stop bits, RTS/CTS or XON/XOFF flow control, DTR/RTS control.
 - **Port discovery with device details** — device name, manufacturer, USB VID/PID and serial number, so you can find "the Arduino" instead of guessing `COM5`.
 - **Hot-plug and auto reconnect** — `PORT_ADDED` / `PORT_REMOVED` events; a port that loses its device reopens by itself when it comes back (even on a different COM number, for devices with a serial number).
-- **Never blocks removal** — honours Windows removal requests (Device Manager *Disable*, *Safely remove hardware*), and detects unplugging within a fraction of a second.
+- **Never blocks removal** — honours Windows removal requests (Device Manager *Disable*, *Safely remove hardware*) and detects unplugging within a fraction of a second.
 - **Multiple ports at once**, each with its own I/O threads.
 - **Packet framing helpers** — line/delimiter, fixed length, sync + length prefix with checksum validation (XOR, SUM, CRC-16 Modbus, CRC-16 CCITT), plus a zero-allocation fast path.
-- **Fast** — 0.05 ms round trip, 250+ MB/s through a virtual port pair, writes never stall the UI.
+- **Fast** — 0.05 ms round trip, 250+ MB/s through a virtual port pair; writes never stall the UI.
 - **One ANE for everything** — AIR 32 to AIR 51, 32-bit and 64-bit apps. No extra DLLs, no Visual C++ redistributable.
 
 ## Requirements
@@ -31,18 +37,18 @@ Talk to Arduino boards, USB-serial adapters (FTDI, CH340, CP210x, PL2303), PLCs,
 |---|---|
 | OS | Windows 10 or 11, 32-bit or 64-bit apps |
 | Runtime | Adobe AIR 32 or newer (tested with AIR 32.0 and HARMAN AIR 51.2) |
-| Tools | Adobe Animate, or any AS3 toolchain (Flash Builder, IntelliJ IDEA, VS Code + AIR SDK, command line `amxmlc`/`adt`) |
+| Tools | Adobe Animate, Flash Builder, IntelliJ IDEA, VS Code + AIR SDK, or the command line (`amxmlc` / `adt`) |
 | App profile | `extendedDesktop` (required for native extensions) |
 
 ## Download
 
-Get **`AirSerial.ane`** from the [latest release](https://github.com/RJOFX/AirSerial/releases/latest).
-`AirSerial.swc` is the same ActionScript library without the native part — some IDEs use it for code completion.
+Get **`AirSerial.ane`** from the [latest release](https://github.com/RJOFX/AirSerial/releases/latest) — or the zip, which also contains the documentation and examples.
 
 | File | What it is |
 |---|---|
-| `AirSerial.ane` | The extension. Add it to your project and package it with your app. |
+| `AirSerial.ane` | The extension. Add it to your project; it is packaged with your app. |
 | `AirSerial.swc` | Optional. Code hints in IDEs that do not read ANEs. Must be the same version as the ANE. |
+| `AirSerial-x.y.z.zip` | Both files plus README, license and examples. |
 
 Direct links to the newest version: [AirSerial.ane](https://github.com/RJOFX/AirSerial/releases/latest/download/AirSerial.ane) · [AirSerial.swc](https://github.com/RJOFX/AirSerial/releases/latest/download/AirSerial.swc)
 
@@ -51,7 +57,7 @@ Direct links to the newest version: [AirSerial.ane](https://github.com/RJOFX/Air
 ### Adobe Animate
 
 1. **File › ActionScript Settings › Library path** → **+ (Add Native Extension)** → choose `AirSerial.ane`.
-2. Make sure your AIR application descriptor (`YourApp-app.xml`) lists the extension (Animate normally adds it for you):
+2. Make sure the AIR application descriptor (`YourApp-app.xml`) lists the extension (Animate normally adds it for you):
    ```xml
    <extensions>
        <extensionID>com.airserial.SerialANE</extensionID>
@@ -61,6 +67,12 @@ Direct links to the newest version: [AirSerial.ane](https://github.com/RJOFX/Air
 4. **Publish** (File › Publish Settings › AIR settings): choose installer or captive runtime (`.exe`) and a signing certificate (a self-signed one can be created on the same screen). The ANE is packaged automatically.
 
 > **Do not use parentheses in the app file name** (`<filename>` in the descriptor, e.g. `my (test) app`). AIR's packager (ADT) fails with `Unmatched closing ')'`. The display name (`<name>`) may contain anything.
+
+### Flash Builder
+
+1. **Project › Properties › ActionScript Build Path › Native Extensions** → **Add ANE…** → `AirSerial.ane`.
+2. **Project › Properties › ActionScript Build Packaging › Native Extensions** → tick **Package** for `AirSerial.ane`.
+3. Run or debug as usual; the descriptor gets the `<extensions>` entry automatically.
 
 ### Command line / other IDEs
 
@@ -78,33 +90,37 @@ adt -package -storetype pkcs12 -keystore cert.p12 -target bundle MyApp MyApp-app
 :: 64-bit app (AIR 33+):  add  -arch x64  after -target bundle
 ```
 
-Your descriptor needs `<supportedProfiles>extendedDesktop desktop</supportedProfiles>` (or no `supportedProfiles` at all) and the `<extensions>` entry above.
+The descriptor needs `<supportedProfiles>extendedDesktop desktop</supportedProfiles>` (or no `supportedProfiles` at all) and the `<extensions>` entry above.
 
-## Quick start
+## Use
+
+Create a `SerialPort`, open it with the COM port and baud rate, and close it when your application ends.
 
 ```actionscript
 import com.airserial.*;
+import flash.desktop.NativeApplication;
 import flash.events.*;
 
-var port:SerialPort = new SerialPort();
-port.addEventListener(Event.CONNECT, function (e:Event):void { trace("open:", port.portName); });
-port.addEventListener(ProgressEvent.SOCKET_DATA, onData);
-port.addEventListener(Event.CLOSE, function (e:Event):void { trace("lost:", port.lastError); });
+public var port:SerialPort;
 
-if (!port.open("COM3", 115200)) trace("cannot open:", port.lastError);
+public function initApp():void
+{
+    port = new SerialPort();
+    port.addEventListener(ProgressEvent.SOCKET_DATA, onData);
+    port.addEventListener(Event.CLOSE, onLost);
+    if (!port.open("COM3", 9600))          // most Arduino sketches use 9600 or 115200
+        trace("cannot open:", port.lastError);
 
-function onData(e:ProgressEvent):void {
-    trace(port.readUTFBytes(port.bytesAvailable));
+    NativeApplication.nativeApplication.addEventListener(Event.EXITING, closeApp);
 }
 
-port.writeUTFBytes("hello\n");
-port.flush();                 // like Socket: data is sent on flush()
-port.send("hello\n");         // write + flush in one call (String, ByteArray, [bytes])
+protected function closeApp(event:Event):void
+{
+    port.close();
+}
 ```
 
-Close the port when you are done (`port.close()`), e.g. on `Event.CLOSING` of the window.
-
-## Finding the right port
+Not sure which port it is? `Serial.listPorts()` lists the ports that exist right now, with device names and USB ids:
 
 ```actionscript
 for each (var p:SerialPortInfo in Serial.listPorts())
@@ -115,7 +131,7 @@ var arduinos:Vector.<SerialPortInfo> = Serial.findPorts(0x2341);      // by USB 
 var ftdi:Vector.<SerialPortInfo> = Serial.findPorts(0x0403, 0x6001);  // vendor + product id
 ```
 
-## Line settings
+Line settings other than 8N1 go in a `SerialPortOptions`:
 
 ```actionscript
 // 7 data bits, even parity, 2 stop bits, hardware handshake
@@ -123,6 +139,39 @@ var o:SerialPortOptions = new SerialPortOptions(7, Parity.EVEN, 2, FlowControl.R
 o.dtr = true;          // default true. Arduino Leonardo/Micro only send while DTR is on
 port.open("COM3", 9600, o);
 ```
+
+### Reading data
+
+When data arrives, `SerialPort` dispatches `ProgressEvent.SOCKET_DATA` (`"socketData"`). Check `bytesAvailable` and read with any `IDataInput` method — exactly like a `Socket`:
+
+```actionscript
+function onData(event:ProgressEvent):void
+{
+    while (port.bytesAvailable > 0)
+        trace(port.readUnsignedByte());
+}
+```
+
+- `readUTFBytes(length)`, `readAllText()` — text
+- `readBytes(byteArray, offset, length)` — raw bytes
+- `readUnsignedByte()`, `readShort()`, `readInt()`, `readFloat()`, `readDouble()`, … — numbers (`endian` sets the byte order)
+
+Bytes stay buffered until you read them, so you can also read later. Arrivals are batched into one event, and the native receive buffer holds 4 MB by default. For packets (lines, fixed records, binary frames) use a framer — see [Packets](#packets-framing).
+
+### Sending data
+
+Write with any `IDataOutput` method, then call `flush()` to send — exactly like a `Socket`. `send()` does both in one call:
+
+```actionscript
+port.writeUTFBytes("LED ON\n");
+port.writeByte(0x01);
+port.flush();
+
+port.send("hello\n");                  // String (UTF-8)
+port.send([0x01, 0x03, 0x00, 0x01]);   // bytes
+```
+
+`flush()` hands the data to a background thread and returns immediately; your frame rate is not affected even for large transfers. `bytesPending` tells how much is still waiting. Writing to a port that is not open throws an `IOError`.
 
 ## Packets (framing)
 
@@ -148,7 +197,7 @@ packets.addEventListener(FrameEvent.FRAME, function (e:FrameEvent):void {
 });
 ```
 
-Thousands of packets per second? Use the fast path — no event object and no ByteArray per packet (3× faster for small packets):
+Thousands of packets per second? Use the fast path — no event object and no ByteArray per packet (about 3× faster for small packets):
 
 ```actionscript
 packets.reuseFrame = true;    // the same ByteArray is reused: copy what you keep
@@ -168,7 +217,7 @@ Serial.addEventListener(SerialPortEvent.PORT_ADDED,   function (e:SerialPortEven
 Serial.addEventListener(SerialPortEvent.PORT_REMOVED, function (e:SerialPortEvent):void { trace("-", e.portName); });
 ```
 
-AirSerial notices a lost device in three ways — I/O errors, Windows removal notifications, and the port disappearing from the system list — so it also works with drivers that keep a removed port's handle alive. Typical detection time is 0.2–0.6 s; reconnection follows about 0.3 s after the device is back.
+AirSerial notices a lost device in three ways — I/O errors, Windows removal notifications, and the port disappearing from the system list — so it also works with drivers that keep a removed port's handle alive. Typical detection time is 0.2–0.6 s; reconnection follows about 0.3 s after the device is back. `Event.CLOSE` reports the loss, `Event.CONNECT` the reconnection.
 
 ## Events
 
@@ -179,8 +228,31 @@ AirSerial notices a lost device in three ways — I/O errors, Windows removal no
 | | `Event.CLOSE` | the device was lost (unplugged, disabled, driver error); reason in `lastError`. Not dispatched by `close()` |
 | | `IOErrorEvent.IO_ERROR` | `open()` failed — only if you listen for it; `open()` also returns `false` |
 | | `SerialPortEvent.RECONNECTING` | `autoReconnect` started waiting for the device |
-| | `SerialPortEvent.BUFFER_OVERFLOW` | the receive buffer (4 MB by default) was full and the oldest bytes were dropped |
+| | `SerialPortEvent.BUFFER_OVERFLOW` | the receive buffer was full and the oldest bytes were dropped |
 | `Serial` (static) | `SerialPortEvent.PORT_ADDED` / `PORT_REMOVED` | a COM port appeared / disappeared |
+
+## Migrating from as3-arduino-connector
+
+AirSerial can replace the `ArduinoConnector` ANE (`com.quetwo.Arduino`). The data event has the same name (`"socketData"`), so most listener code keeps working.
+
+| ArduinoConnector | AirSerial |
+|---|---|
+| `new ArduinoConnector()` | `new SerialPort()` |
+| `connect("COM10", 9600)` | `open("COM10", 9600)` — also returns `Boolean`; reason in `lastError` |
+| `portOpen` | `connected` |
+| `getComPorts()` (fixed list COM1–COM16) | `Serial.portNames()` (ports that exist) or `Serial.listPorts()` (with device details) |
+| `addEventListener("socketData", …)` | unchanged, or `ProgressEvent.SOCKET_DATA` |
+| `bytesAvailable` | `bytesAvailable` |
+| `readBytesAsString()` | `readUTFBytes(bytesAvailable)` or `readAllText()` |
+| `readBytesAsByteArray()` | `readBytes(myByteArray)` |
+| `readBytesAsArray()` | loop over `readUnsignedByte()` |
+| `readByte()` (returns `uint`) | `readUnsignedByte()` — AirSerial's `readByte()` is signed, as in `IDataInput` |
+| `writeString(s)` / `writeByte(b)` / `writeBytes(ba)` | the same `write…` call followed by `flush()`, or `send(s)` / `send(b)` / `send(ba)` |
+| `flush()` (did nothing) | `flush()` sends the written data |
+| `close()` / `dispose()` | `close()` |
+| `isSupported()` | `Serial.isSupported` |
+
+What you gain: 64-bit apps and AIR 33–51, any baud rate and line setting, binary data, no 4 KB buffer limit, device discovery, hot-plug and auto reconnect, and no extra `pthreadGC2.dll`.
 
 ## Diagnostics
 
@@ -191,18 +263,37 @@ trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 d
 
 `droppedBytes` growing means your code does not read fast enough. Please include both lines when you report a problem.
 
-## Troubleshooting
+## FAQ
 
-| Symptom | Cause / fix |
-|---|---|
-| `Serial.isSupported` is `false` / "native extension is not available" | The ANE is not added to the project, the app does not use the `extendedDesktop` profile, or the app is not running on Windows. |
-| "Port is in use by another program" | Close the other program (Arduino IDE serial monitor, terminal programs, another instance of your app). |
-| "Port settings rejected by driver" | The device/driver does not support that baud rate or setting. On-board COM ports usually stop at 115200. |
-| The Arduino restarts when the port opens | Normal for most boards (DTR reset). Wait for its first message, or set `options.dtr = false`. |
-| Arduino Leonardo / Micro / Pro Micro sends nothing | Keep `dtr = true` (default). |
-| Warning "library x is used with native y" | The SWC and ANE come from different releases. Use files from one release. |
-| Publishing fails with `Unmatched closing ')'` | Remove parentheses from the app `<filename>`. |
-| Device Manager asks for a reboot when disabling a virtual port (com0com, VSPE) | Those drivers do not support removal notifications; close the port first. Real USB devices are fine. |
+**`Serial.isSupported` is `false` / "native extension is not available".**
+The ANE is not added to the project, the app does not run with the `extendedDesktop` profile, or it is not running on Windows. In Animate, check the library path; on the command line, check `-extdir` and the `<extensions>` entry.
+
+**"Port is in use by another program".**
+Only one program can open a COM port. Close the Arduino IDE's Serial Monitor, terminal programs, or another instance of your app.
+
+**"Port settings rejected by driver".**
+The device or driver does not support that baud rate or setting. On-board COM ports usually stop at 115200; USB adapters go much higher.
+
+**The Arduino restarts every time I open the port.**
+That is how most boards work (the DTR line resets them). Wait for the board's first message before sending, or set `options.dtr = false` if your board and sketch do not need the reset.
+
+**My Arduino Leonardo / Micro / Pro Micro sends nothing.**
+These boards only send while DTR is on. Keep `dtr = true` (the default).
+
+**Text looks garbled.**
+The baud rate does not match `Serial.begin()` on the device, or the device does not send UTF-8 (use `readMultiByte(length, "euc-kr")` etc.).
+
+**Do I need to call `close()` before the app exits?**
+It is good practice and releases the port immediately, but since 1.0.1 the app also shuts down cleanly if you forget.
+
+**Warning "library x is used with native y".**
+`AirSerial.swc` and `AirSerial.ane` come from different releases. Use both files from the same release.
+
+**Publishing fails with `Unmatched closing ')'`.**
+Remove parentheses from the app `<filename>` in the descriptor.
+
+**Device Manager asks for a reboot when I disable a virtual port (com0com, VSPE).**
+Those drivers do not support removal notifications. Close the port first. Real USB devices and on-board ports are released automatically.
 
 ## Feedback
 

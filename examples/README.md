@@ -2,8 +2,32 @@
 
 | Example | What it shows |
 |---|---|
+| [document-class/SerialDemo.as](document-class/SerialDemo.as) | The smallest complete app as a class: `initApp()` / `closeApp()`, picks a USB serial device (or the port given on the command line), echoes every received line back, auto reconnect. Works as an Animate *Document class*, a Flash Builder / IntelliJ main class or with `amxmlc` |
 | [animate/FrameScript.as](animate/FrameScript.as) ([한국어](animate/FrameScript.ko.as)) | Complete Animate frame script: auto-pick a USB serial device, text packets with `DelimiterFramer`, send button, plug/unplug events, auto reconnect, clean-up on exit |
 | [arduino/AirSerialEcho](arduino/AirSerialEcho/AirSerialEcho.ino) | Arduino sketch that echoes everything back (115200 baud) — a quick way to test your AirSerial app with real hardware |
+
+## Document class (SerialDemo)
+
+[SerialDemo.as](document-class/SerialDemo.as) opens a port at **9600** baud, sends `hello from AirSerial`, and answers every line it receives with `echo: <line>`. Without a port name it uses the first USB serial device, otherwise the first COM port.
+
+**Animate**
+1. **File › New › AIR for Desktop**, save the FLA next to `SerialDemo.as`.
+2. Add `AirSerial.ane` (**File › ActionScript Settings › Library path › + (Add Native Extension)**).
+3. In the **Properties** panel, set **Class** (Document class) to `SerialDemo` and press **Ctrl+Enter**.
+
+**Flash Builder / IntelliJ IDEA**
+Create an ActionScript AIR desktop project with `SerialDemo.as` as the main class, add `AirSerial.ane` as a native extension and run it. To choose the port, put it in the launch arguments (e.g. `COM5`).
+
+**Command line**
+```bat
+amxmlc -external-library-path+=AirSerial.ane -output SerialDemo.swf SerialDemo.as
+mkdir ext\AirSerial.ane
+tar -xf AirSerial.ane -C ext\AirSerial.ane
+adl -profile extendedDesktop -extdir ext SerialDemo-app.xml . -- COM5
+```
+[SerialDemo-app.xml](document-class/SerialDemo-app.xml) is a ready-made application descriptor (change `<versionNumber>` / `<id>` for your own app).
+
+To try it with an Arduino, upload the [echo sketch](#arduino-echo-sketch) and change both baud rates to the same value.
 
 ## Animate frame script
 

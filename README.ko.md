@@ -9,14 +9,20 @@
 ![AIR](https://img.shields.io/badge/Adobe%20AIR-32%20%E2%80%93%2051-red)
 [![License](https://img.shields.io/badge/license-free%20for%20non--commercial%20use-lightgrey)](LICENSE)
 
-[English](README.md) · [API 레퍼런스](docs/API.md) · [변경 이력](CHANGELOG.md) · [예제](examples)
+[English](README.md) · [API 레퍼런스](docs/API.md) · [예제](examples) · [변경 이력](CHANGELOG.md) · [FAQ](#faq)
 
 ---
 
+## 배경
+
+AIR 에는 시리얼 포트 API 가 없습니다. 그래서 오랫동안 COM 포트를 TCP 소켓으로 중계해 주는 프록시 프로그램을 쓰는 것이 일반적이었고, 대부분의 AS3 시리얼 코드와 그 위의 라이브러리들은 `flash.net.Socket` 을 기준으로 작성되었습니다.
+
+AirSerial 은 COM 포트를 직접 다루면서 **`Socket` 처럼 동작합니다**. 같은 `IDataInput` / `IDataOutput` 메서드, 같은 `ProgressEvent.SOCKET_DATA` 이벤트(`"socketData"`), 같은 `flush()`. 소켓에서 읽던 코드는 거의 그대로 시리얼 포트에서 읽을 수 있습니다. 여기에 시리얼 장치에 필요한 포트 찾기, 회선 설정, 꽂기·뽑기 처리, 패킷 나누기를 더했습니다.
+
 ## 특징
 
-- **Socket 과 같은 API** — `IDataInput` / `IDataOutput`, `ProgressEvent.SOCKET_DATA`, `flush()`. Socket 을 써봤다면 바로 사용할 수 있습니다.
-- **모든 회선 설정** — 드라이버가 허용하는 아무 보레이트, 데이터비트 5–8, 패리티, 스톱비트 1/1.5/2, RTS/CTS·XON/XOFF 흐름제어, DTR/RTS.
+- **Socket 과 같은 API** — `IDataInput` / `IDataOutput`, `ProgressEvent.SOCKET_DATA`, `flush()`.
+- **모든 회선 설정** — 드라이버가 허용하는 아무 보레이트(9600, 115200, 921600, 1000000 …), 데이터비트 5–8, 패리티, 스톱비트 1/1.5/2, RTS/CTS·XON/XOFF 흐름제어, DTR/RTS.
 - **장치 정보와 함께 포트 찾기** — 장치명, 제조사, USB VID/PID, 시리얼번호. `COM5` 를 짐작하지 않고 "아두이노" 를 찾을 수 있습니다.
 - **꽂기·뽑기 감지와 자동 재연결** — `PORT_ADDED` / `PORT_REMOVED` 이벤트. 장치가 다시 연결되면 포트가 저절로 다시 열립니다 (시리얼번호가 있는 장치는 COM 번호가 바뀌어도).
 - **장치 제거를 막지 않음** — 장치 관리자 "사용 안 함", "하드웨어 안전하게 제거" 요청을 받으면 포트를 스스로 닫습니다. 케이블 분리는 1초 안에 감지합니다.
@@ -31,17 +37,18 @@
 |---|---|
 | OS | Windows 10 / 11, 32비트·64비트 앱 |
 | 런타임 | Adobe AIR 32 이상 (AIR 32.0, HARMAN AIR 51.2 에서 검증) |
-| 도구 | Adobe Animate 또는 AS3 개발 환경 (Flash Builder, IntelliJ IDEA, VS Code + AIR SDK, 명령줄 `amxmlc`/`adt`) |
+| 도구 | Adobe Animate, Flash Builder, IntelliJ IDEA, VS Code + AIR SDK, 명령줄(`amxmlc` / `adt`) |
 | 앱 프로필 | `extendedDesktop` (네이티브 익스텐션 필수 조건) |
 
 ## 다운로드
 
-[최신 릴리스](https://github.com/RJOFX/AirSerial/releases/latest)에서 **`AirSerial.ane`** 를 받으세요.
+[최신 릴리스](https://github.com/RJOFX/AirSerial/releases/latest)에서 **`AirSerial.ane`** 를 받으세요. 문서와 예제까지 한 번에 받으려면 zip 을 받으면 됩니다.
 
 | 파일 | 설명 |
 |---|---|
 | `AirSerial.ane` | 익스텐션 본체. 프로젝트에 추가하면 앱과 함께 패키징됩니다. |
 | `AirSerial.swc` | 선택. ANE 를 읽지 못하는 IDE 의 코드 힌트용. ANE 와 같은 버전이어야 합니다. |
+| `AirSerial-x.y.z.zip` | 위 두 파일 + README, 라이선스, 예제 |
 
 최신 버전 바로 받기: [AirSerial.ane](https://github.com/RJOFX/AirSerial/releases/latest/download/AirSerial.ane) · [AirSerial.swc](https://github.com/RJOFX/AirSerial/releases/latest/download/AirSerial.swc)
 
@@ -61,6 +68,12 @@
 
 > **앱 파일 이름(`<filename>`)에 괄호를 넣지 마세요** (예: `my (test) app`). AIR 패키저(ADT)가 `Unmatched closing ')'` 오류로 실패합니다. 표시 이름(`<name>`)은 상관없습니다.
 
+### Flash Builder
+
+1. **프로젝트 › 속성 › ActionScript 빌드 경로 › 네이티브 익스텐션** → **ANE 추가…** → `AirSerial.ane`
+2. **프로젝트 › 속성 › ActionScript 빌드 패키징 › 네이티브 익스텐션** → `AirSerial.ane` 의 **패키지** 체크
+3. 평소처럼 실행·디버그. 앱 설명 파일의 `<extensions>` 항목은 자동으로 들어갑니다.
+
 ### 명령줄 / 다른 IDE
 
 ```bat
@@ -79,31 +92,35 @@ adt -package -storetype pkcs12 -keystore cert.p12 -target bundle MyApp MyApp-app
 
 앱 설명 파일에는 `<supportedProfiles>extendedDesktop desktop</supportedProfiles>` (또는 `supportedProfiles` 생략)와 위의 `<extensions>` 항목이 필요합니다.
 
-## 빠른 시작
+## 사용법
+
+`SerialPort` 를 만들고 COM 포트와 보레이트로 열고, 앱이 끝날 때 닫습니다.
 
 ```actionscript
 import com.airserial.*;
+import flash.desktop.NativeApplication;
 import flash.events.*;
 
-var port:SerialPort = new SerialPort();
-port.addEventListener(Event.CONNECT, function (e:Event):void { trace("열림:", port.portName); });
-port.addEventListener(ProgressEvent.SOCKET_DATA, onData);
-port.addEventListener(Event.CLOSE, function (e:Event):void { trace("끊김:", port.lastError); });
+public var port:SerialPort;
 
-if (!port.open("COM3", 115200)) trace("열기 실패:", port.lastError);
+public function initApp():void
+{
+    port = new SerialPort();
+    port.addEventListener(ProgressEvent.SOCKET_DATA, onData);
+    port.addEventListener(Event.CLOSE, onLost);
+    if (!port.open("COM3", 9600))          // 아두이노 스케치는 보통 9600 또는 115200
+        trace("열기 실패:", port.lastError);
 
-function onData(e:ProgressEvent):void {
-    trace(port.readUTFBytes(port.bytesAvailable));
+    NativeApplication.nativeApplication.addEventListener(Event.EXITING, closeApp);
 }
 
-port.writeUTFBytes("hello\n");
-port.flush();                 // Socket 과 동일: flush() 해야 전송됨
-port.send("hello\n");         // 쓰기 + flush 한 번에 (String, ByteArray, [바이트 배열])
+protected function closeApp(event:Event):void
+{
+    port.close();
+}
 ```
 
-다 쓰면 `port.close()` 로 닫으세요 (예: 창의 `Event.CLOSING` 에서).
-
-## 포트 찾기
+어떤 포트인지 모르겠다면 `Serial.listPorts()` 가 지금 있는 포트를 장치명, USB ID 와 함께 알려줍니다.
 
 ```actionscript
 for each (var p:SerialPortInfo in Serial.listPorts())
@@ -114,7 +131,7 @@ var arduinos:Vector.<SerialPortInfo> = Serial.findPorts(0x2341);      // USB 제
 var ftdi:Vector.<SerialPortInfo> = Serial.findPorts(0x0403, 0x6001);  // 제조사 + 제품 ID
 ```
 
-## 회선 설정
+8N1 이 아닌 회선 설정은 `SerialPortOptions` 로 지정합니다.
 
 ```actionscript
 // 데이터비트 7, 짝수 패리티, 스톱비트 2, 하드웨어 흐름제어
@@ -122,6 +139,39 @@ var o:SerialPortOptions = new SerialPortOptions(7, Parity.EVEN, 2, FlowControl.R
 o.dtr = true;          // 기본값 true. 아두이노 레오나르도/마이크로는 DTR 이 켜져 있어야 데이터를 보냄
 port.open("COM3", 9600, o);
 ```
+
+### 데이터 읽기
+
+데이터가 도착하면 `SerialPort` 가 `ProgressEvent.SOCKET_DATA` (`"socketData"`) 를 보냅니다. `bytesAvailable` 을 확인하고 `IDataInput` 메서드로 읽으면 됩니다. `Socket` 과 똑같습니다.
+
+```actionscript
+function onData(event:ProgressEvent):void
+{
+    while (port.bytesAvailable > 0)
+        trace(port.readUnsignedByte());
+}
+```
+
+- `readUTFBytes(length)`, `readAllText()` — 텍스트
+- `readBytes(byteArray, offset, length)` — 바이트 그대로
+- `readUnsignedByte()`, `readShort()`, `readInt()`, `readFloat()`, `readDouble()` … — 숫자 (`endian` 으로 바이트 순서 지정)
+
+읽기 전까지 데이터는 버퍼에 남아 있으므로 나중에 읽어도 됩니다. 한꺼번에 들어온 데이터는 이벤트 한 번으로 묶이고, 네이티브 수신 버퍼는 기본 4 MB 입니다. 줄·고정 길이·바이너리 패킷은 프레이머를 쓰세요 — [패킷 나누기](#패킷-나누기-framing) 참고.
+
+### 데이터 보내기
+
+`IDataOutput` 메서드로 쓴 다음 `flush()` 로 보냅니다. `Socket` 과 똑같습니다. `send()` 는 둘을 한 번에 합니다.
+
+```actionscript
+port.writeUTFBytes("LED ON\n");
+port.writeByte(0x01);
+port.flush();
+
+port.send("hello\n");                  // 문자열 (UTF-8)
+port.send([0x01, 0x03, 0x00, 0x01]);   // 바이트
+```
+
+`flush()` 는 데이터를 백그라운드 스레드에 넘기고 바로 돌아오므로, 큰 데이터를 보내도 프레임레이트에 영향이 없습니다. 아직 남은 양은 `bytesPending` 으로 알 수 있습니다. 열리지 않은 포트에 쓰면 `IOError` 가 발생합니다.
 
 ## 패킷 나누기 (framing)
 
@@ -167,7 +217,7 @@ Serial.addEventListener(SerialPortEvent.PORT_ADDED,   function (e:SerialPortEven
 Serial.addEventListener(SerialPortEvent.PORT_REMOVED, function (e:SerialPortEvent):void { trace("-", e.portName); });
 ```
 
-AirSerial 은 장치 분리를 세 가지 방법(입출력 오류, Windows 제거 알림, 시스템 포트 목록에서 사라짐)으로 감지하므로, 제거된 포트를 오류 없이 붙잡고 있는 드라이버에서도 동작합니다. 보통 0.2–0.6 초 안에 감지하고, 장치가 돌아오면 약 0.3 초 뒤 다시 연결됩니다.
+AirSerial 은 장치 분리를 세 가지 방법(입출력 오류, Windows 제거 알림, 시스템 포트 목록에서 사라짐)으로 감지하므로, 제거된 포트를 오류 없이 붙잡고 있는 드라이버에서도 동작합니다. 보통 0.2–0.6 초 안에 감지하고, 장치가 돌아오면 약 0.3 초 뒤 다시 연결됩니다. 끊김은 `Event.CLOSE`, 재연결은 `Event.CONNECT` 로 알려줍니다.
 
 ## 이벤트
 
@@ -178,30 +228,72 @@ AirSerial 은 장치 분리를 세 가지 방법(입출력 오류, Windows 제�
 | | `Event.CLOSE` | 장치를 잃음 (분리, 사용 안 함, 드라이버 오류). 이유는 `lastError`. `close()` 로 닫을 때는 발생 안 함 |
 | | `IOErrorEvent.IO_ERROR` | `open()` 실패 — 리스너를 등록했을 때만. `open()` 도 `false` 를 반환 |
 | | `SerialPortEvent.RECONNECTING` | `autoReconnect` 가 장치를 기다리기 시작 |
-| | `SerialPortEvent.BUFFER_OVERFLOW` | 수신 버퍼(기본 4 MB)가 가득 차 오래된 바이트를 버림 |
+| | `SerialPortEvent.BUFFER_OVERFLOW` | 수신 버퍼가 가득 차 오래된 바이트를 버림 |
 | `Serial` (static) | `SerialPortEvent.PORT_ADDED` / `PORT_REMOVED` | COM 포트가 생김 / 사라짐 |
+
+## as3-arduino-connector 에서 옮겨오기
+
+AirSerial 은 `ArduinoConnector` ANE(`com.quetwo.Arduino`)를 대신할 수 있습니다. 데이터 이벤트 이름이 같아서(`"socketData"`) 리스너 코드는 대부분 그대로 동작합니다.
+
+| ArduinoConnector | AirSerial |
+|---|---|
+| `new ArduinoConnector()` | `new SerialPort()` |
+| `connect("COM10", 9600)` | `open("COM10", 9600)` — 역시 `Boolean` 반환, 실패 이유는 `lastError` |
+| `portOpen` | `connected` |
+| `getComPorts()` (COM1–COM16 고정 목록) | `Serial.portNames()` (실제로 있는 포트) 또는 `Serial.listPorts()` (장치 정보 포함) |
+| `addEventListener("socketData", …)` | 그대로, 또는 `ProgressEvent.SOCKET_DATA` |
+| `bytesAvailable` | `bytesAvailable` |
+| `readBytesAsString()` | `readUTFBytes(bytesAvailable)` 또는 `readAllText()` |
+| `readBytesAsByteArray()` | `readBytes(myByteArray)` |
+| `readBytesAsArray()` | `readUnsignedByte()` 반복 |
+| `readByte()` (`uint` 반환) | `readUnsignedByte()` — AirSerial 의 `readByte()` 는 `IDataInput` 규약대로 부호 있는 값 |
+| `writeString(s)` / `writeByte(b)` / `writeBytes(ba)` | 같은 `write…` 호출 뒤 `flush()`, 또는 `send(s)` / `send(b)` / `send(ba)` |
+| `flush()` (아무 동작 없음) | `flush()` 가 실제로 전송 |
+| `close()` / `dispose()` | `close()` |
+| `isSupported()` | `Serial.isSupported` |
+
+옮겨오면 얻는 것: 64비트 앱과 AIR 33–51 지원, 모든 보레이트·회선 설정, 바이너리 데이터, 4 KB 버퍼 제한 없음, 장치 찾기, 꽂기·뽑기와 자동 재연결, 별도 `pthreadGC2.dll` 불필요.
 
 ## 진단
 
 ```actionscript
-trace(Serial.VERSION, Serial.nativeVersion);   // 1.0.0  1.0.0 (Windows x64)
+trace(Serial.VERSION, Serial.nativeVersion);   // 1.0.1  1.0.1 (Windows x64)
 trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 dropped=0 buffered=0 pending=0 removalWatch=0]
 ```
 
 `droppedBytes` 가 늘면 코드가 수신 속도를 따라가지 못하는 것입니다. 문제를 알려주실 때 위 두 줄의 출력을 함께 보내주세요.
 
-## 문제 해결
+## FAQ
 
-| 증상 | 원인 / 해결 |
-|---|---|
-| `Serial.isSupported` 가 `false` / "native extension is not available" | ANE 가 프로젝트에 추가되지 않았거나, 앱 프로필이 `extendedDesktop` 이 아니거나, Windows 가 아님 |
-| "Port is in use by another program" | 다른 프로그램을 닫으세요 (아두이노 IDE 시리얼 모니터, 터미널 프로그램, 앱의 다른 인스턴스) |
-| "Port settings rejected by driver" | 장치·드라이버가 그 보레이트나 설정을 지원하지 않음. 메인보드 COM 포트는 보통 115200 까지 |
-| 포트를 열면 아두이노가 재시작됨 | 대부분의 보드에서 정상 (DTR 리셋). 첫 메시지를 기다리거나 `options.dtr = false` |
-| 아두이노 레오나르도 / 마이크로가 아무것도 안 보냄 | `dtr = true` 유지 (기본값) |
-| "library x is used with native y" 경고 | SWC 와 ANE 의 릴리스가 다름. 같은 릴리스의 파일을 사용 |
-| 게시 시 `Unmatched closing ')'` | 앱 `<filename>` 에서 괄호 제거 |
-| 가상 포트(com0com, VSPE)를 장치 관리자에서 끄면 재부팅을 요구 | 해당 드라이버가 제거 알림을 지원하지 않음. 먼저 포트를 닫으세요. 실제 USB 장치는 문제 없음 |
+**`Serial.isSupported` 가 `false` / "native extension is not available"**
+ANE 가 프로젝트에 추가되지 않았거나, 앱이 `extendedDesktop` 프로필로 실행되지 않았거나, Windows 가 아닙니다. Animate 는 라이브러리 경로를, 명령줄은 `-extdir` 와 `<extensions>` 항목을 확인하세요.
+
+**"Port is in use by another program"**
+COM 포트는 한 프로그램만 열 수 있습니다. 아두이노 IDE 시리얼 모니터, 터미널 프로그램, 앱의 다른 인스턴스를 닫으세요.
+
+**"Port settings rejected by driver"**
+장치나 드라이버가 그 보레이트·설정을 지원하지 않습니다. 메인보드 COM 포트는 보통 115200 까지, USB 어댑터는 훨씬 높게 됩니다.
+
+**포트를 열 때마다 아두이노가 재시작됩니다.**
+대부분의 보드는 원래 그렇습니다 (DTR 신호로 리셋). 보드의 첫 메시지를 기다린 뒤 보내거나, 리셋이 필요 없다면 `options.dtr = false` 로 여세요.
+
+**아두이노 레오나르도 / 마이크로 / 프로 마이크로가 아무것도 안 보냅니다.**
+이 보드들은 DTR 이 켜져 있을 때만 보냅니다. `dtr = true`(기본값)를 유지하세요.
+
+**글자가 깨집니다.**
+장치의 `Serial.begin()` 보레이트와 다르거나, 장치가 UTF-8 이 아닌 문자를 보냅니다 (`readMultiByte(length, "euc-kr")` 등 사용).
+
+**앱 종료 전에 `close()` 를 꼭 불러야 하나요?**
+부르는 것이 좋습니다 (포트를 바로 놓아줌). 잊어도 1.0.1 부터는 앱이 깔끔하게 종료됩니다.
+
+**"library x is used with native y" 경고**
+`AirSerial.swc` 와 `AirSerial.ane` 의 릴리스가 다릅니다. 같은 릴리스의 파일을 쓰세요.
+
+**게시할 때 `Unmatched closing ')'`**
+앱 설명 파일의 `<filename>` 에서 괄호를 빼세요.
+
+**가상 포트(com0com, VSPE)를 장치 관리자에서 끄면 재부팅을 요구합니다.**
+해당 드라이버가 제거 알림을 지원하지 않습니다. 먼저 포트를 닫으세요. 실제 USB 장치와 메인보드 포트는 자동으로 놓아줍니다.
 
 ## 피드백
 

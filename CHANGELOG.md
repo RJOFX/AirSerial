@@ -3,6 +3,15 @@
 All notable changes to AirSerial are listed here. Versions follow [Semantic Versioning](https://semver.org):
 MAJOR for incompatible API changes, MINOR for new features, PATCH for fixes.
 
+## [1.0.1] - 2026-10-26
+
+### Fixed
+- The app could crash while exiting when ports were still open or hot-plug events were still being watched and `close()` was not called. The extension now stays loaded until the process ends and stops any leftover background threads itself.
+
+### Documentation
+- README restructured: background, Flash Builder setup, reading and sending data, migrating from as3-arduino-connector, FAQ.
+- New document-class example (`examples/document-class/SerialDemo.as`).
+
 ## [1.0.0] - 2026-10-26
 
 First public release.
@@ -32,4 +41,5 @@ First public release.
 - One ANE for AIR 32 – AIR 51, Windows x86 and x64. No additional DLLs or Visual C++ redistributable.
 - Windows 10 or later.
 
+[1.0.1]: https://github.com/RJOFX/AirSerial/releases/tag/v1.0.1
 [1.0.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.0.0

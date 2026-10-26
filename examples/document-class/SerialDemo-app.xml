@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<application xmlns="http://ns.adobe.com/air/application/32.0">
+    <id>com.example.SerialDemo</id>
+    <filename>SerialDemo</filename>
+    <name>AirSerial Demo</name>
+    <versionNumber>1.0.0</versionNumber>
+    <initialWindow>
+        <content>SerialDemo.swf</content>
+        <title>AirSerial Demo</title>
+        <visible>true</visible>
+        <width>640</width>
+        <height>400</height>
+    </initialWindow>
+    <supportedProfiles>extendedDesktop desktop</supportedProfiles>
+    <extensions>
+        <extensionID>com.airserial.SerialANE</extensionID>
+    </extensions>
+</application>
