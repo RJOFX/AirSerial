@@ -1,0 +1,27 @@
+# Only the release files listed below are part of this repository.
+# Everything else in the working folder is ignored by default.
+/*
+
+!/.gitignore
+!/.gitattributes
+!/.github/
+!/README.md
+!/README.ko.md
+!/CHANGELOG.md
+!/LICENSE
+!/VERSION
+!/docs/
+!/examples/
+
+!/dist/
+/dist/*
+!/dist/AirSerial.ane
+!/dist/AirSerial.swc
+
+# OS / editor clutter inside the published folders
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp
+*.bak
+*.log

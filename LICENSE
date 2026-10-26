@@ -1,0 +1,47 @@
+AirSerial License (Non-Commercial)
+
+Copyright (c) 2026 RJOFX. All rights reserved.
+
+"Software" means the AirSerial native extension (AirSerial.ane), the AirSerial
+ActionScript library (AirSerial.swc) and the accompanying documentation and examples.
+
+1. Permitted use
+   You may use the Software free of charge for personal, educational, research and
+   other non-commercial purposes, including in applications you build with it and
+   distribute free of charge.
+
+2. Commercial use
+   Any commercial use requires a separate written license from the copyright holder.
+   Commercial use includes, but is not limited to: applications or services that are
+   sold, licensed for a fee, or supported by advertising; use inside a company, for
+   a client, or as part of paid work; and distribution together with a product that
+   is sold. To request a commercial license, open an issue titled "Commercial license"
+   at https://github.com/RJOFX/AirSerial/issues.
+
+3. Redistribution
+   You may redistribute the Software only unmodified, free of charge, and together
+   with this license. When it is bundled inside an application you build, this
+   license does not have to be shipped separately, but you may not separate the
+   Software from your application and offer it on its own.
+
+4. Restrictions
+   You may not modify, decompile, disassemble or reverse engineer the Software,
+   except to the extent that applicable law expressly permits it despite this
+   limitation. You may not remove or change copyright notices, or sell, rent or
+   sublicense the Software.
+
+5. Examples
+   The source code in the "examples" folder may be copied into and modified within
+   your own applications without restriction.
+
+6. No warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+   INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+   PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE
+   LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+   USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+7. Termination
+   This license ends automatically if you break its terms. You must then stop using
+   and distributing the Software.

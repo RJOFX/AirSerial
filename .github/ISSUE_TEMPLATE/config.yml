@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/RJOFX/AirSerial#readme
+    about: Installation, usage, troubleshooting
+  - name: API reference
+    url: https://github.com/RJOFX/AirSerial/blob/main/docs/API.md
+    about: All classes and members
