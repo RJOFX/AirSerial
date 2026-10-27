@@ -3,6 +3,15 @@
 All notable changes to AirSerial are listed here. Versions follow [Semantic Versioning](https://semver.org):
 MAJOR for incompatible API changes, MINOR for new features, PATCH for fixes.
 
+## [1.2.2] - 2026-10-27
+
+### Fixed
+- `SerialLink` logged binary received data as text, so messages with control bytes showed up as empty `received:` lines (output stops at a 0x00 byte). Received and sent data is now logged as text only when every byte is printable, otherwise as hex.
+- `SerialLink` passed on received data without the `prefix` as if it were a message, and kept data that never got its `suffix` without any trace.
+
+### Changed
+- `SerialLink` receiving: with `prefix` set, data without it is dropped; data waiting longer than `receiveTimeout` (new, default 1000 ms) for its `suffix` is dropped; both are logged and reported with `FrameEvent.DISCARD`. Without `suffix`, every chunk of received data is delivered as `FrameEvent.FRAME`.
+
 ## [1.2.1] - 2026-10-27
 
 ### Fixed
@@ -66,6 +75,7 @@ First public release.
 - One ANE for AIR 32 – AIR 51, Windows x86 and x64. No additional DLLs or Visual C++ redistributable.
 - Windows 10 or later.
 
+[1.2.2]: https://github.com/RJOFX/AirSerial/releases/tag/v1.2.2
 [1.2.1]: https://github.com/RJOFX/AirSerial/releases/tag/v1.2.1
 [1.2.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.2.0
 [1.1.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.1.0

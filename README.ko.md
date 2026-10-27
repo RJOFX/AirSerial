@@ -238,10 +238,10 @@ trace(link.status);     // connected COM5 @115200, last sent: LED ON, [SerialPor
 - **열릴 때까지 재시도**: 장치가 없거나 다른 프로그램이 포트를 쓰는 중이면 계속 시도하고, 장치가 꽂히면 즉시 다시 시도합니다.
 - **재연결**: 장치가 끊기면 다시 연결합니다. `"auto"` 이면 시리얼번호가 없는 칩도 다른 USB 단자로 따라갑니다.
 - **마지막 메시지를 잃지 않음**: 끊긴 동안 보낸 마지막 `send()` 는 보류했다가 연결되면 보내고, 재연결 뒤에는 마지막 메시지를 한 번 더 보내 장치 상태를 앱과 맞춥니다.
-- **메시지 포장**: 모든 메시지 앞뒤에 `prefix` / `suffix` 바이트를 붙이고(예: `suffix: "\n"`, 또는 `prefix: 0x02, suffix: 0x03`), 받은 데이터는 `suffix` 기준으로 나눕니다.
+- **메시지 포장**: 모든 메시지 앞뒤에 `prefix` / `suffix` 바이트를 붙이고(예: `suffix: "\n"`, 또는 `prefix: 0x02, suffix: 0x03`), 받은 데이터는 `suffix` 기준으로 나눕니다. `prefix` 가 없거나 `suffix` 가 끝내 오지 않는 데이터는 HEX 로 로그에 남기고 버립니다.
 - **로그**: 연결, 끊김, 송신, 수신을 `trace`, `log` 이벤트, 그리고 (선택) 앱 저장소 폴더의 로그 파일에 남깁니다.
 
-`configure()` 는 일반 객체를 받으므로 설정을 앱 옆의 JSON 파일에 둘 수 있습니다. 두 번째 객체는 파일에 없는 키의 기본값입니다. 키: `port`, `baud`, `vid`, `pid`, `dataBits`, `parity`, `stopBits`, `dtr`, `rts`, `prefix`, `suffix`, `retry`, `resend`, `log`. 자세한 내용은 [API 문서](docs/API.md#seriallink).
+`configure()` 는 일반 객체를 받으므로 설정을 앱 옆의 JSON 파일에 둘 수 있습니다. 두 번째 객체는 파일에 없는 키의 기본값입니다. 키: `port`, `baud`, `vid`, `pid`, `dataBits`, `parity`, `stopBits`, `dtr`, `rts`, `prefix`, `suffix`, `retry`, `receiveTimeout`, `resend`, `log`. 자세한 내용은 [API 문서](docs/API.md#seriallink).
 
 ## 이벤트
 
@@ -256,6 +256,7 @@ trace(link.status);     // connected COM5 @115200, last sent: LED ON, [SerialPor
 | `Serial` (static) | `SerialPortEvent.PORT_ADDED` / `PORT_REMOVED` | COM 포트가 생김 / 사라짐 |
 | `SerialLink` | `Event.CONNECT` / `Event.CLOSE` | 연결됨 (재연결 때마다) / 연결 끊김 |
 | | `FrameEvent.FRAME` | 받은 메시지 (`suffix` 까지, `prefix` 제거) |
+| | `FrameEvent.DISCARD` | 버린 수신 데이터 (`prefix` 없음, 또는 `suffix` 가 제때 오지 않음) |
 | | `"log"` (`TextEvent`) | 로그 한 줄 |
 
 ## as3-arduino-connector 에서 옮겨오기
@@ -284,7 +285,7 @@ AirSerial 은 `ArduinoConnector` ANE(`com.quetwo.Arduino`)를 대신할 수 있�
 ## 진단
 
 ```actionscript
-trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.1  1.2.1 (Windows x64)
+trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.2  1.2.2 (Windows x64)
 trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 dropped=0 buffered=0 pending=0 removalWatch=0]
 ```
 

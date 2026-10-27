@@ -114,7 +114,7 @@ link.send("LED ON");
 | `lastSent:String` (get) | Last message written (text, or hex for bytes). |
 | `port:SerialPort` (get) | The underlying port after `start()` (e.g. for `stats`). |
 | `log(message:String):void` | Writes a timestamped line to `trace` (`[SERIAL] ...`), the `log` event and the log file. |
-| `target`, `baudRate`, `vendorId`, `productId`, `options:SerialPortOptions`, `prefix:ByteArray`, `suffix:ByteArray`, `retryInterval`, `resend`, `logFile`, `maxLogBytes` | The settings `configure()` writes; may also be set directly before `start()`. |
+| `target`, `baudRate`, `vendorId`, `productId`, `options:SerialPortOptions`, `prefix:ByteArray`, `suffix:ByteArray`, `receiveTimeout`, `maxMessageBytes`, `retryInterval`, `resend`, `logFile`, `maxLogBytes` | The settings `configure()` writes; may also be set directly before `start()`. |
 
 **configure() keys**
 
@@ -124,12 +124,15 @@ link.send("LED ON");
 | `baud` | `9600` | Baud rate. |
 | `vid`, `pid` | any | USB vendor / product id as hex strings (`"2341"`), used with `"auto"`. |
 | `dataBits`, `parity`, `stopBits`, `dtr`, `rts` | 8, `"none"`, 1, on, on | Line settings (see SerialPortOptions). |
-| `prefix`, `suffix` | none | Bytes added before / after every message: a byte value (`2`), an array (`[13, 10]`) or a string (`"\n"`). Received data is split at `suffix`; everything up to the last `prefix` is dropped from each message. |
+| `prefix`, `suffix` | none | Bytes added before / after every message: a byte value (`2`), an array (`[13, 10]`) or a string (`"\n"`). Received data is split at `suffix`. With `prefix` set, a message starts after its last `prefix`; data without `prefix` is dropped. |
+| `receiveTimeout` | `1000` | Milliseconds received data may wait for its `suffix`; after that it is dropped (`0` = wait forever). |
 | `retry` | `3000` | Milliseconds between open attempts while the port cannot be opened (minimum 500). A plugged-in device is tried at once. |
 | `resend` | on | After a reconnect, send the last message again. |
 | `log` | off | Log file name in `File.applicationStorageDirectory` (`1` = `"serial.log"`, `0` = none). Renamed to `*.old.log` above 1 MB. |
 
-Events: `Event.CONNECT` after every (re)connect, `Event.CLOSE` when the device is lost (SerialLink keeps waiting for it), `FrameEvent.FRAME` per received message when `suffix` is set, `"log"` (`flash.events.TextEvent`, `text` = line) per log line.
+Events: `Event.CONNECT` after every (re)connect, `Event.CLOSE` when the device is lost (SerialLink keeps waiting for it), `FrameEvent.FRAME` per received message (without `suffix`: per chunk of received data), `FrameEvent.DISCARD` for dropped bytes (no `prefix`, noise before it, or no `suffix` within `receiveTimeout`), `"log"` (`flash.events.TextEvent`, `text` = line) per log line.
+
+SerialLink reads all received data itself; do not also read from `port` or attach a framer to it. Received and sent data is logged as text when every byte is printable, otherwise as hex (`01 03 00 01`).
 
 With a fixed port name, reconnection uses `SerialPort.autoReconnect` (same name, or the same USB device by serial number); with `"auto"` SerialLink also moves to a new port name when the device shows up there. If the extension is not available, `start()` logs it and `send()` does nothing.
 

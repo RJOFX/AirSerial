@@ -238,10 +238,10 @@ trace(link.status);     // connected COM5 @115200, last sent: LED ON, [SerialPor
 - **Keeps trying** until the port opens (device missing, port used by another program), and tries again at once when a device is plugged in.
 - **Reconnects** when the device is lost; with `"auto"` it follows the device to another USB socket even if the chip has no serial number.
 - **Never loses the latest message**: while disconnected the latest `send()` is held and sent on connect; after a reconnect the last message is sent again so the device matches the app.
-- **Message framing**: `prefix` / `suffix` bytes are added to every message (e.g. `suffix: "\n"`, or `prefix: 0x02, suffix: 0x03`), and received data is split at `suffix`.
+- **Message framing**: `prefix` / `suffix` bytes are added to every message (e.g. `suffix: "\n"`, or `prefix: 0x02, suffix: 0x03`), and received data is split at `suffix`. Data without `prefix`, or that never gets its `suffix`, is logged as hex and dropped.
 - **Log**: every connect, loss, send and receive goes to `trace`, a `log` event and optionally a log file in the app storage folder.
 
-`configure()` takes a plain object, so the settings can live in a JSON file next to the app; a second object supplies defaults for keys the file does not have. Keys: `port`, `baud`, `vid`, `pid`, `dataBits`, `parity`, `stopBits`, `dtr`, `rts`, `prefix`, `suffix`, `retry`, `resend`, `log`. See the [API reference](docs/API.md#seriallink).
+`configure()` takes a plain object, so the settings can live in a JSON file next to the app; a second object supplies defaults for keys the file does not have. Keys: `port`, `baud`, `vid`, `pid`, `dataBits`, `parity`, `stopBits`, `dtr`, `rts`, `prefix`, `suffix`, `retry`, `receiveTimeout`, `resend`, `log`. See the [API reference](docs/API.md#seriallink).
 
 ## Events
 
@@ -256,6 +256,7 @@ trace(link.status);     // connected COM5 @115200, last sent: LED ON, [SerialPor
 | `Serial` (static) | `SerialPortEvent.PORT_ADDED` / `PORT_REMOVED` | a COM port appeared / disappeared |
 | `SerialLink` | `Event.CONNECT` / `Event.CLOSE` | connected (also after each reconnect) / connection lost |
 | | `FrameEvent.FRAME` | a received message (data up to `suffix`, `prefix` removed) |
+| | `FrameEvent.DISCARD` | received bytes that were dropped (no `prefix`, or no `suffix` in time) |
 | | `"log"` (`TextEvent`) | a log line |
 
 ## Migrating from as3-arduino-connector
@@ -284,7 +285,7 @@ What you gain: 64-bit apps and AIR 33–51, any baud rate and line setting, bina
 ## Diagnostics
 
 ```actionscript
-trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.1  1.2.1 (Windows x64)
+trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.2  1.2.2 (Windows x64)
 trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 dropped=0 buffered=0 pending=0 removalWatch=0]
 ```
 
