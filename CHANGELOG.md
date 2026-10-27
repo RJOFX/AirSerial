@@ -3,6 +3,18 @@
 All notable changes to AirSerial are listed here. Versions follow [Semantic Versioning](https://semver.org):
 MAJOR for incompatible API changes, MINOR for new features, PATCH for fixes.
 
+## [1.2.0] - 2026-10-27
+
+### Added
+- `SerialLink`: keeps one device connected for the life of the app, so the app only calls `send()`.
+  - Picks the port by name, or `"auto"` (USB device by VID/PID, else the first USB serial port).
+  - Keeps retrying until the port opens, and tries again as soon as a device is plugged in.
+  - Reconnects after the device is lost; with `"auto"` follows it to another USB socket even without a serial number.
+  - Holds the latest message while disconnected and sends it on connect; resends the last message after a reconnect.
+  - Adds `prefix` / `suffix` bytes to every message and splits received data at `suffix` (`FrameEvent.FRAME`).
+  - Logs to `trace`, a `log` event and an optional log file.
+  - `configure()` reads settings from a plain object such as a parsed JSON file, with defaults for missing keys.
+
 ## [1.1.0] - 2026-10-27
 
 ### Fixed
@@ -49,6 +61,7 @@ First public release.
 - One ANE for AIR 32 – AIR 51, Windows x86 and x64. No additional DLLs or Visual C++ redistributable.
 - Windows 10 or later.
 
+[1.2.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.2.0
 [1.1.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.1.0
 [1.0.1]: https://github.com/RJOFX/AirSerial/releases/tag/v1.0.1
 [1.0.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.0.0

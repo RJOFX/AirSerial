@@ -4,6 +4,7 @@ Packages: `com.airserial` (ports) and `com.airserial.framing` (packet helpers).
 
 - [Serial](#serial) — discovery, hot-plug events, versions
 - [SerialPort](#serialport) — one COM port
+- [SerialLink](#seriallink) — keeps one device connected (retry, reconnect, resend, framing, log)
 - [SerialPortOptions](#serialportoptions), [Parity](#parity), [FlowControl](#flowcontrol)
 - [SerialPortInfo](#serialportinfo), [SerialPortStats](#serialportstats), [SerialPortEvent](#serialportevent)
 - Framing: [Framer](#framer), [DelimiterFramer](#delimiterframer), [FixedLengthFramer](#fixedlengthframer), [LengthPrefixFramer](#lengthprefixframer), [FrameEvent](#frameevent), [Checksum](#checksum)
@@ -87,6 +88,50 @@ Writes go to an output buffer; `flush()` queues it for sending. Sending happens 
 | `IOErrorEvent.IO_ERROR` | `open()` failed, also when it was finishing in the background (only dispatched if you listen for it). |
 | `SerialPortEvent.RECONNECTING` | `autoReconnect` started waiting. |
 | `SerialPortEvent.BUFFER_OVERFLOW` | The native receive buffer was full and old bytes were dropped (`droppedBytes` = total so far). |
+
+---
+
+## SerialLink
+
+`com.airserial.SerialLink extends EventDispatcher`: keeps one device connected for the life of the app. Added in 1.2.0.
+
+```actionscript
+var link:SerialLink = new SerialLink();
+link.configure(JSON.parse(settingsText), {port: "COM1", baud: 9600, suffix: "\n", log: "serial.log"});
+link.start();
+link.send("LED ON");
+```
+
+| Member | Description |
+|---|---|
+| `SerialLink(config:Object = null)` | Optionally calls `configure(config)`. |
+| `configure(config:Object, defaults:Object = null):SerialLink` | Reads the keys below from a plain object (e.g. parsed JSON); `defaults` fills keys `config` does not have. Unknown keys are ignored. Returns `this`. |
+| `start():void` | Starts connecting. `send()` may be called before or after. |
+| `stop():void` | Closes the port and stops reconnecting. Also done automatically when the app exits. |
+| `send(data:*):Boolean` | Sends one message with `prefix` and `suffix`: a `String` (UTF-8), `ByteArray`, `Array` of byte values or one byte value. While not connected the latest message is held and sent on connect; returns `true` only if it was written now. |
+| `connected:Boolean` (get) | `true` while the device is connected. |
+| `status:String` (get) | One line for diagnostics: state, port, baud, last message, held message, stats. |
+| `lastSent:String` (get) | Last message written (text, or hex for bytes). |
+| `port:SerialPort` (get) | The underlying port after `start()` (e.g. for `stats`). |
+| `log(message:String):void` | Writes a timestamped line to `trace` (`[SERIAL] ...`), the `log` event and the log file. |
+| `target`, `baudRate`, `vendorId`, `productId`, `options:SerialPortOptions`, `prefix:ByteArray`, `suffix:ByteArray`, `retryInterval`, `resend`, `logFile`, `maxLogBytes` | The settings `configure()` writes; may also be set directly before `start()`. |
+
+**configure() keys**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `port` | `"auto"` | Port name, or `"auto"`: the USB device matching `vid`/`pid`, else the first USB serial port, else the first port. |
+| `baud` | `9600` | Baud rate. |
+| `vid`, `pid` | any | USB vendor / product id as hex strings (`"2341"`), used with `"auto"`. |
+| `dataBits`, `parity`, `stopBits`, `dtr`, `rts` | 8, `"none"`, 1, on, on | Line settings (see SerialPortOptions). |
+| `prefix`, `suffix` | none | Bytes added before / after every message: a byte value (`2`), an array (`[13, 10]`) or a string (`"\n"`). Received data is split at `suffix`; everything up to the last `prefix` is dropped from each message. |
+| `retry` | `3000` | Milliseconds between open attempts while the port cannot be opened (minimum 500). A plugged-in device is tried at once. |
+| `resend` | on | After a reconnect, send the last message again. |
+| `log` | off | Log file name in `File.applicationStorageDirectory` (`1` = `"serial.log"`, `0` = none). Renamed to `*.old.log` above 1 MB. |
+
+Events: `Event.CONNECT` after every (re)connect, `Event.CLOSE` when the device is lost (SerialLink keeps waiting for it), `FrameEvent.FRAME` per received message when `suffix` is set, `"log"` (`flash.events.TextEvent`, `text` = line) per log line.
+
+With a fixed port name, reconnection uses `SerialPort.autoReconnect` (same name, or the same USB device by serial number); with `"auto"` SerialLink also moves to a new port name when the device shows up there. If the extension is not available, `start()` logs it and `send()` does nothing.
 
 ---
 

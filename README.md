@@ -26,6 +26,7 @@ AirSerial talks to the COM port directly and **behaves like a `Socket`**: the sa
 - **Port discovery with device details** — device name, manufacturer, USB VID/PID and serial number, so you can find "the Arduino" instead of guessing `COM5`.
 - **Hot-plug and auto reconnect** — `PORT_ADDED` / `PORT_REMOVED` events; a port that loses its device reopens by itself when it comes back (even on a different COM number, for devices with a serial number).
 - **Never blocks removal** — honours Windows removal requests (Device Manager *Disable*, *Safely remove hardware*) and detects unplugging within a fraction of a second.
+- **Stay-connected helper**: `SerialLink` finds the device, keeps retrying and reconnecting, holds and resends the latest message, adds start/end bytes and logs everything, so a kiosk or exhibit needs only `send()`.
 - **Multiple ports at once**, each with its own I/O threads.
 - **Packet framing helpers** — line/delimiter, fixed length, sync + length prefix with checksum validation (XOR, SUM, CRC-16 Modbus, CRC-16 CCITT), plus a zero-allocation fast path.
 - **Fast** — 0.05 ms round trip, 250+ MB/s through a virtual port pair; writes never stall the UI.
@@ -219,6 +220,29 @@ Serial.addEventListener(SerialPortEvent.PORT_REMOVED, function (e:SerialPortEven
 
 AirSerial notices a lost device in three ways — I/O errors, Windows removal notifications, and the port disappearing from the system list — so it also works with drivers that keep a removed port's handle alive. Typical detection time is 0.2–0.6 s; reconnection follows about 0.3 s after the device is back. `Event.CLOSE` reports the loss, `Event.CONNECT` the reconnection.
 
+## Keeping a device connected (SerialLink)
+
+For an app that should simply "always talk to the device" (a kiosk, an exhibit, a machine panel), `SerialLink` does the connection work for you:
+
+```actionscript
+var link:SerialLink = new SerialLink();
+link.configure({port: "auto", baud: 115200, suffix: "\n", log: "serial.log"});
+link.start();
+
+link.send("LED ON");    // sent now, or held and sent as soon as the device is connected
+link.addEventListener(FrameEvent.FRAME, function (e:FrameEvent):void { trace("device says", e.text); });
+trace(link.status);     // connected COM5 @115200, last sent: LED ON, [SerialPortStats ...]
+```
+
+- **Finds the port**: a fixed name (`"COM3"`), or `"auto"`: the USB device with `vid`/`pid`, else the first USB serial port.
+- **Keeps trying** until the port opens (device missing, port used by another program), and tries again at once when a device is plugged in.
+- **Reconnects** when the device is lost; with `"auto"` it follows the device to another USB socket even if the chip has no serial number.
+- **Never loses the latest message**: while disconnected the latest `send()` is held and sent on connect; after a reconnect the last message is sent again so the device matches the app.
+- **Message framing**: `prefix` / `suffix` bytes are added to every message (e.g. `suffix: "\n"`, or `prefix: 0x02, suffix: 0x03`), and received data is split at `suffix`.
+- **Log**: every connect, loss, send and receive goes to `trace`, a `log` event and optionally a log file in the app storage folder.
+
+`configure()` takes a plain object, so the settings can live in a JSON file next to the app; a second object supplies defaults for keys the file does not have. Keys: `port`, `baud`, `vid`, `pid`, `dataBits`, `parity`, `stopBits`, `dtr`, `rts`, `prefix`, `suffix`, `retry`, `resend`, `log`. See the [API reference](docs/API.md#seriallink).
+
 ## Events
 
 | Dispatcher | Event | When |
@@ -230,6 +254,9 @@ AirSerial notices a lost device in three ways — I/O errors, Windows removal no
 | | `SerialPortEvent.RECONNECTING` | `autoReconnect` started waiting for the device |
 | | `SerialPortEvent.BUFFER_OVERFLOW` | the receive buffer was full and the oldest bytes were dropped |
 | `Serial` (static) | `SerialPortEvent.PORT_ADDED` / `PORT_REMOVED` | a COM port appeared / disappeared |
+| `SerialLink` | `Event.CONNECT` / `Event.CLOSE` | connected (also after each reconnect) / connection lost |
+| | `FrameEvent.FRAME` | a received message (data up to `suffix`, `prefix` removed) |
+| | `"log"` (`TextEvent`) | a log line |
 
 ## Migrating from as3-arduino-connector
 
@@ -257,7 +284,7 @@ What you gain: 64-bit apps and AIR 33–51, any baud rate and line setting, bina
 ## Diagnostics
 
 ```actionscript
-trace(Serial.VERSION, Serial.nativeVersion);   // 1.1.0  1.1.0 (Windows x64)
+trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.0  1.2.0 (Windows x64)
 trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 dropped=0 buffered=0 pending=0 removalWatch=0]
 ```
 
