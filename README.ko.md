@@ -284,7 +284,7 @@ AirSerial 은 `ArduinoConnector` ANE(`com.quetwo.Arduino`)를 대신할 수 있�
 ## 진단
 
 ```actionscript
-trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.0  1.2.0 (Windows x64)
+trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.1  1.2.1 (Windows x64)
 trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 dropped=0 buffered=0 pending=0 removalWatch=0]
 ```
 

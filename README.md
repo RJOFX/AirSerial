@@ -284,7 +284,7 @@ What you gain: 64-bit apps and AIR 33–51, any baud rate and line setting, bina
 ## Diagnostics
 
 ```actionscript
-trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.0  1.2.0 (Windows x64)
+trace(Serial.VERSION, Serial.nativeVersion);   // 1.2.1  1.2.1 (Windows x64)
 trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 dropped=0 buffered=0 pending=0 removalWatch=0]
 ```
 

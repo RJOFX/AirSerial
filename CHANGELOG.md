@@ -3,6 +3,11 @@
 All notable changes to AirSerial are listed here. Versions follow [Semantic Versioning](https://semver.org):
 MAJOR for incompatible API changes, MINOR for new features, PATCH for fixes.
 
+## [1.2.1] - 2026-10-27
+
+### Fixed
+- `trace()` output from inside the extension did not appear in the Output panel: `SerialLink`'s `[SERIAL]` log lines (the log file and `log` event were not affected) and the warning about a SWC and ANE from different releases.
+
 ## [1.2.0] - 2026-10-27
 
 ### Added
@@ -61,6 +66,7 @@ First public release.
 - One ANE for AIR 32 – AIR 51, Windows x86 and x64. No additional DLLs or Visual C++ redistributable.
 - Windows 10 or later.
 
+[1.2.1]: https://github.com/RJOFX/AirSerial/releases/tag/v1.2.1
 [1.2.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.2.0
 [1.1.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.1.0
 [1.0.1]: https://github.com/RJOFX/AirSerial/releases/tag/v1.0.1
