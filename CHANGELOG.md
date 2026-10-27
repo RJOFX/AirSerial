@@ -3,6 +3,14 @@
 All notable changes to AirSerial are listed here. Versions follow [Semantic Versioning](https://semver.org):
 MAJOR for incompatible API changes, MINOR for new features, PATCH for fixes.
 
+## [1.1.0] - 2026-10-27
+
+### Fixed
+- The app froze for about 3.5 s when opening a Prolific PL2303 adapter (and other USB adapters whose driver is slow to open the port) right after it was plugged in — also during automatic reconnection.
+
+### Changed
+- `open()` no longer holds the app for more than about 0.1 s. When the driver is slow, `open()` returns `true`, `connected` stays `false` until the port is ready, and `Event.CONNECT` follows — or `IOErrorEvent.IO_ERROR` with `lastError` if the port then fails to open. Ports that open normally behave exactly as before.
+
 ## [1.0.1] - 2026-10-26
 
 ### Fixed
@@ -41,5 +49,6 @@ First public release.
 - One ANE for AIR 32 – AIR 51, Windows x86 and x64. No additional DLLs or Visual C++ redistributable.
 - Windows 10 or later.
 
+[1.1.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.1.0
 [1.0.1]: https://github.com/RJOFX/AirSerial/releases/tag/v1.0.1
 [1.0.0]: https://github.com/RJOFX/AirSerial/releases/tag/v1.0.0

@@ -223,10 +223,10 @@ AirSerial notices a lost device in three ways — I/O errors, Windows removal no
 
 | Dispatcher | Event | When |
 |---|---|---|
-| `SerialPort` | `Event.CONNECT` | after a successful `open()` (next frame) and after each automatic reconnect |
+| `SerialPort` | `Event.CONNECT` | after a successful `open()` (next frame, or a few seconds later for a USB adapter that was just plugged in) and after each automatic reconnect |
 | | `ProgressEvent.SOCKET_DATA` | new bytes are available (`bytesLoaded` = how many) |
 | | `Event.CLOSE` | the device was lost (unplugged, disabled, driver error); reason in `lastError`. Not dispatched by `close()` |
-| | `IOErrorEvent.IO_ERROR` | `open()` failed — only if you listen for it; `open()` also returns `false` |
+| | `IOErrorEvent.IO_ERROR` | `open()` failed — only if you listen for it; `open()` also returns `false`, unless it was still finishing in the background |
 | | `SerialPortEvent.RECONNECTING` | `autoReconnect` started waiting for the device |
 | | `SerialPortEvent.BUFFER_OVERFLOW` | the receive buffer was full and the oldest bytes were dropped |
 | `Serial` (static) | `SerialPortEvent.PORT_ADDED` / `PORT_REMOVED` | a COM port appeared / disappeared |
@@ -257,7 +257,7 @@ What you gain: 64-bit apps and AIR 33–51, any baud rate and line setting, bina
 ## Diagnostics
 
 ```actionscript
-trace(Serial.VERSION, Serial.nativeVersion);   // 1.0.0  1.0.0 (Windows x64)
+trace(Serial.VERSION, Serial.nativeVersion);   // 1.1.0  1.1.0 (Windows x64)
 trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 dropped=0 buffered=0 pending=0 removalWatch=0]
 ```
 

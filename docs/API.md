@@ -42,9 +42,9 @@ Each instance owns its own native context and I/O threads, so any number of port
 | Member | Description |
 |---|---|
 | `SerialPort()` | Creates a closed port. |
-| `open(portName:String, baudRate:uint = 9600, options:SerialPortOptions = null):Boolean` | Opens the port (`"COM3"`, `"COM12"`, …). Returns `true` on success and dispatches `Event.CONNECT` on the next frame. On failure returns `false`, sets `lastError` and, if a listener is registered, dispatches `IOErrorEvent.IO_ERROR`. Throws `ArgumentError` for invalid options. Opening an open port closes it first. |
+| `open(portName:String, baudRate:uint = 9600, options:SerialPortOptions = null):Boolean` | Opens the port (`"COM3"`, `"COM12"`, …). Returns `true` on success and dispatches `Event.CONNECT` on the next frame. On failure returns `false`, sets `lastError` and, if a listener is registered, dispatches `IOErrorEvent.IO_ERROR`. Throws `ArgumentError` for invalid options. Opening an open port closes it first.<br>`open()` never holds the app for more than about 0.1 s: when the driver is slow to open the port (some USB adapters take seconds right after they are plugged in), `open()` returns `true`, `connected` stays `false`, and the port finishes opening in the background — then `Event.CONNECT` follows, or `IOErrorEvent.IO_ERROR` with `lastError` set. |
 | `close():void` | Closes the port and stops automatic reconnection. Does not dispatch `Event.CLOSE`. |
-| `connected:Boolean` (get) | `true` while open. |
+| `connected:Boolean` (get) | `true` while open (`false` while an `open()` is still finishing in the background). |
 | `autoReconnect:Boolean` | When the device is lost, wait for it and reopen automatically (`Event.CONNECT` again). Matches the same port name, or — for USB devices with a serial number — the same VID + PID + serial number on another COM port. Default `false`. |
 | `reconnectInterval:uint` | Milliseconds between reconnect attempts. Default 1000. Plug-in events also trigger an immediate attempt. |
 | `reconnecting:Boolean` (get) | `true` while waiting for the device. |
@@ -81,10 +81,10 @@ Writes go to an output buffer; `flush()` queues it for sending. Sending happens 
 
 | Event | When |
 |---|---|
-| `Event.CONNECT` | After `open()` succeeded, and after each automatic reconnect. |
+| `Event.CONNECT` | After `open()` succeeded (also when it finished in the background), and after each automatic reconnect. |
 | `ProgressEvent.SOCKET_DATA` | New bytes arrived (`bytesLoaded` = count). Arrivals are batched: one event per batch. |
 | `Event.CLOSE` | The device was lost: unplugged, disabled in Device Manager, driver error, or the port disappeared from the system. Reason in `lastError`. |
-| `IOErrorEvent.IO_ERROR` | `open()` failed (only dispatched if you listen for it). |
+| `IOErrorEvent.IO_ERROR` | `open()` failed, also when it was finishing in the background (only dispatched if you listen for it). |
 | `SerialPortEvent.RECONNECTING` | `autoReconnect` started waiting. |
 | `SerialPortEvent.BUFFER_OVERFLOW` | The native receive buffer was full and old bytes were dropped (`droppedBytes` = total so far). |
 

@@ -223,10 +223,10 @@ AirSerial 은 장치 분리를 세 가지 방법(입출력 오류, Windows 제�
 
 | 대상 | 이벤트 | 시점 |
 |---|---|---|
-| `SerialPort` | `Event.CONNECT` | `open()` 성공 직후(다음 프레임), 자동 재연결 성공 시 |
+| `SerialPort` | `Event.CONNECT` | `open()` 성공 직후(다음 프레임. 방금 꽂은 USB 어댑터는 몇 초 뒤), 자동 재연결 성공 시 |
 | | `ProgressEvent.SOCKET_DATA` | 새 데이터 도착 (`bytesLoaded` = 바이트 수) |
 | | `Event.CLOSE` | 장치를 잃음 (분리, 사용 안 함, 드라이버 오류). 이유는 `lastError`. `close()` 로 닫을 때는 발생 안 함 |
-| | `IOErrorEvent.IO_ERROR` | `open()` 실패 — 리스너를 등록했을 때만. `open()` 도 `false` 를 반환 |
+| | `IOErrorEvent.IO_ERROR` | `open()` 실패 — 리스너를 등록했을 때만. `open()` 도 `false` 를 반환 (백그라운드에서 마무리 중이던 경우는 제외) |
 | | `SerialPortEvent.RECONNECTING` | `autoReconnect` 가 장치를 기다리기 시작 |
 | | `SerialPortEvent.BUFFER_OVERFLOW` | 수신 버퍼가 가득 차 오래된 바이트를 버림 |
 | `Serial` (static) | `SerialPortEvent.PORT_ADDED` / `PORT_REMOVED` | COM 포트가 생김 / 사라짐 |
@@ -257,7 +257,7 @@ AirSerial 은 `ArduinoConnector` ANE(`com.quetwo.Arduino`)를 대신할 수 있�
 ## 진단
 
 ```actionscript
-trace(Serial.VERSION, Serial.nativeVersion);   // 1.0.1  1.0.1 (Windows x64)
+trace(Serial.VERSION, Serial.nativeVersion);   // 1.1.0  1.1.0 (Windows x64)
 trace(port.stats);   // [SerialPortStats rx=20971520 tx=0 reads=320 events=155 dropped=0 buffered=0 pending=0 removalWatch=0]
 ```
 
